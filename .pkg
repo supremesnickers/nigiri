@@ -25,7 +25,7 @@
 [date]
   url=git@github.com:motis-project/date.git
   branch=master
-  commit=26d109612ddb8ba331edba7619a6452667f842bb
+  commit=ce88cc33b5551f66655614eeebb7c5b7189025fb
 [wyhash]
   url=git@github.com:motis-project/wyhash.git
   branch=master
@@ -37,4 +37,4 @@
 [protobuf]
   url=git@github.com:motis-project/protobuf.git
   branch=master
-  commit=297171ade5e9bd01d823ffe8b203a5443ec03f15
+  commit=d8136b9c6a62db6ce09900ecdeb82bb793096cbd

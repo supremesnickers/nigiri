@@ -15,20 +15,20 @@ include(cmake/pkg.cmake)
 
 # --- GTFS-RT PROTOBUF ---
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt/gtfs-realtime.pb.h
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt/gtfs-realtime.pb.cc
-    COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:protoc>
-    --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt
-    --proto_path=${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/gtfs-realtime.proto
-    DEPENDS protoc
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gtfs-realtime.proto
-    COMMENT "Generating GTFS RT protocol buffers C++ code"
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt/gtfs-realtime.pb.h
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt/gtfs-realtime.pb.cc
+      COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:protoc>
+      --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt
+      --proto_path=${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/gtfs-realtime.proto
+      DEPENDS protoc
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gtfs-realtime.proto
+      COMMENT "Generating GTFS RT protocol buffers C++ code"
 )
 add_library(gtfsrt ${CMAKE_CURRENT_BINARY_DIR}/generated/gtfsrt/gtfs-realtime.pb.cc)
 target_compile_features(gtfsrt PUBLIC cxx_std_23)
 target_include_directories(gtfsrt SYSTEM PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/generated)
-target_link_libraries(gtfsrt protobuf)
+target_link_libraries(gtfsrt protobuf::libprotobuf)
 
 
 # --- LINT ---
@@ -101,5 +101,6 @@ configure_file (
 )
 file(GLOB_RECURSE nigiri-test-files test/*.cc)
 add_executable(nigiri-test ${nigiri-test-files})
-target_link_libraries(nigiri-test nigiri gtest ianatzdb-res nigiri-generated)
+target_include_directories(nigiri-test PRIVATE include)
+target_link_libraries(nigiri-test nigiri gtest ianatzdb-res nigiri-generated boost-thread)
 target_compile_options(nigiri-test PRIVATE ${nigiri-compile-options})
