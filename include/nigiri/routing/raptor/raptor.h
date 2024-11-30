@@ -46,7 +46,10 @@ struct raptor_stats {
   std::uint64_t route_update_prevented_by_lower_bound_{0ULL};
 };
 
-template <direction SearchDir, bool Rt, via_offset_t Vias>
+template <direction SearchDir,
+          via_offset_t Vias,
+          bool Rt,
+          bool OneToAll = false>
 struct raptor {
   using algo_state_t = raptor_state;
   using algo_stats_t = raptor_stats;
@@ -225,6 +228,10 @@ struct raptor {
       update_td_offsets(k, prf_idx);
 
       trace_print_state_after_round();
+    }
+
+    if constexpr (OneToAll) {
+      return;
     }
 
     is_dest_.for_each_set_bit([&](auto const i) {

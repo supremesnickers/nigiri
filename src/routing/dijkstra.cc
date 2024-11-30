@@ -1,5 +1,7 @@
 #include "nigiri/routing/dijkstra.h"
 
+#include <__ranges/iota_view.h>
+
 #include "fmt/core.h"
 
 #include "utl/get_or_create.h"
@@ -35,7 +37,17 @@ void dijkstra(timetable const& tt,
     m = std::min(static_cast<label::dist_t>(d.count()), m);
   };
 
-  for (auto const& start : q.destination_) {
+  std::vector<offset> destinations;
+  if (q.one_to_all_) {
+    destinations.reserve(tt.n_locations());
+    for (auto i : std::ranges::iota_view{0U, tt.n_locations()}) {
+      destinations.emplace_back(location_idx_t{i}, 0_minutes, 0U);
+    }
+  } else {
+    destinations = q.destination_;
+  }
+
+  for (auto const& start : destinations) {
     for_each_meta(
         tt, q.dest_match_mode_, start.target_,
         [&](location_idx_t const x) { update_min(x, start.duration()); });

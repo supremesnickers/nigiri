@@ -316,7 +316,8 @@ void collect_destinations(timetable const& tt,
                           std::vector<offset> const& dest,
                           location_match_mode const match_mode,
                           bitvec& is_dest,
-                          std::vector<std::uint16_t>& dist_to_dest) {
+                          std::vector<std::uint16_t>& dist_to_dest,
+                          bool const one_to_all) {
   is_dest.resize(tt.n_locations());
   utl::fill(is_dest.blocks_, 0U);
 

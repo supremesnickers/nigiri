@@ -20,6 +20,27 @@ namespace nigiri::routing {
 
 namespace {
 
+template <direction SearchDir, via_offset_t Vias, bool OneToAll>
+routing_result<raptor_stats> raptor_search_with_scope(
+    timetable const& tt,
+    rt_timetable const* rtt,
+    search_state& s_state,
+    raptor_state& r_state,
+    query q,
+    std::optional<std::chrono::seconds> const timeout = std::nullopt) {
+  if (rtt == nullptr) {
+    using algo_t = raptor<SearchDir, Vias, false, OneToAll>;
+    return search<SearchDir, algo_t>{tt,      rtt,          s_state,
+                                     r_state, std::move(q), timeout}
+        .execute();
+  } else {
+    using algo_t = raptor<SearchDir, Vias, true, OneToAll>;
+    return search<SearchDir, algo_t>{tt,      rtt,          s_state,
+                                     r_state, std::move(q), timeout}
+        .execute();
+  }
+}
+
 template <direction SearchDir, via_offset_t Vias>
 routing_result<raptor_stats> raptor_search_with_vias(
     timetable const& tt,
@@ -27,18 +48,15 @@ routing_result<raptor_stats> raptor_search_with_vias(
     search_state& s_state,
     raptor_state& r_state,
     query q,
-    std::optional<std::chrono::seconds> const timeout) {
+    std::optional<std::chrono::seconds> const timeout = std::nullopt,
+    bool oneToAll = false) {
 
-  if (rtt == nullptr) {
-    using algo_t = raptor<SearchDir, false, Vias>;
-    return search<SearchDir, algo_t>{tt,      rtt,          s_state,
-                                     r_state, std::move(q), timeout}
-        .execute();
+  if (oneToAll) {
+    return raptor_search_with_scope<SearchDir, Vias, true>(
+        tt, rtt, s_state, r_state, std::move(q), timeout);
   } else {
-    using algo_t = raptor<SearchDir, true, Vias>;
-    return search<SearchDir, algo_t>{tt,      rtt,          s_state,
-                                     r_state, std::move(q), timeout}
-        .execute();
+    return raptor_search_with_scope<SearchDir, Vias, false>(
+        tt, rtt, s_state, r_state, std::move(q), timeout);
   }
 }
 
@@ -49,7 +67,8 @@ routing_result<raptor_stats> raptor_search_with_dir(
     search_state& s_state,
     raptor_state& r_state,
     query q,
-    std::optional<std::chrono::seconds> const timeout) {
+    std::optional<std::chrono::seconds> const timeout = std::nullopt,
+    bool oneToAll = false) {
   sanitize_via_stops(tt, q);
   utl::verify(q.via_stops_.size() <= kMaxVias,
               "too many via stops: {}, limit: {}", q.via_stops_.size(),
@@ -60,14 +79,14 @@ routing_result<raptor_stats> raptor_search_with_dir(
 
   switch (q.via_stops_.size()) {
     case 0:
-      return raptor_search_with_vias<SearchDir, 0>(tt, rtt, s_state, r_state,
-                                                   std::move(q), timeout);
+      return raptor_search_with_vias<SearchDir, 0>(
+          tt, rtt, s_state, r_state, std::move(q), timeout, oneToAll);
     case 1:
-      return raptor_search_with_vias<SearchDir, 1>(tt, rtt, s_state, r_state,
-                                                   std::move(q), timeout);
+      return raptor_search_with_vias<SearchDir, 1>(
+          tt, rtt, s_state, r_state, std::move(q), timeout, oneToAll);
     case 2:
-      return raptor_search_with_vias<SearchDir, 2>(tt, rtt, s_state, r_state,
-                                                   std::move(q), timeout);
+      return raptor_search_with_vias<SearchDir, 2>(
+          tt, rtt, s_state, r_state, std::move(q), timeout, oneToAll);
   }
   std::unreachable();
 }
@@ -92,7 +111,8 @@ routing_result<raptor_stats> raptor_search(
     raptor_state& r_state,
     query q,
     direction const search_dir,
-    std::optional<std::chrono::seconds> const timeout) {
+    std::optional<std::chrono::seconds> const timeout,
+    bool oneToAll) {
   auto span = get_otel_tracer()->StartSpan("raptor_search");
   auto scope = opentelemetry::trace::Scope{span};
   if (span->IsRecording()) {
@@ -144,11 +164,10 @@ routing_result<raptor_stats> raptor_search(
 
   if (search_dir == direction::kForward) {
     return raptor_search_with_dir<direction::kForward>(
-        tt, rtt, s_state, r_state, std::move(q), timeout);
+        tt, rtt, s_state, r_state, std::move(q), timeout, oneToAll);
   } else {
     return raptor_search_with_dir<direction::kBackward>(
-        tt, rtt, s_state, r_state, std::move(q), timeout);
+        tt, rtt, s_state, r_state, std::move(q), timeout, oneToAll);
   }
 }
-
 }  // namespace nigiri::routing

@@ -42,7 +42,8 @@ void collect_destinations(timetable const&,
                           std::vector<offset> const& destinations,
                           location_match_mode const,
                           bitvec& is_destination,
-                          std::vector<std::uint16_t>& dist_to_dest);
+                          std::vector<std::uint16_t>& dist_to_dest,
+                          bool one_to_all);
 
 void collect_via_destinations(timetable const&,
                               location_idx_t via,

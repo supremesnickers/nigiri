@@ -93,7 +93,7 @@ struct search {
                    && tts.additional_time_ == 0_minutes;
 
     collect_destinations(tt_, q_.destination_, q_.dest_match_mode_,
-                         state_.is_destination_, state_.dist_to_dest_);
+                         state_.is_destination_, state_.dist_to_dest_, q_.one_to_all_);
 
     for (auto const [i, via] : utl::enumerate(q_.via_stops_)) {
       collect_via_destinations(tt_, via.location_, state_.is_via_[i]);
